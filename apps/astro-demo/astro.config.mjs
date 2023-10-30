@@ -1,5 +1,4 @@
 import { defineConfig } from "astro/config";
-import { qwikVite } from "@builder.io/qwik/optimizer";
 import qwik from "@astrojs/qwik";
 import node from "@astrojs/node";
 

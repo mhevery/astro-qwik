@@ -1,5 +1,5 @@
 import { qwikVite } from "@builder.io/qwik/optimizer";
-import type { AstroIntegration, ViteUserConfig } from "astro";
+import type { AstroConfig, AstroIntegration } from "astro";
 import { mkdir, readdir, rename } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -7,7 +7,7 @@ import { build } from "vite";
 import inspect from "vite-plugin-inspect";
 
 export default function createIntegration(): AstroIntegration {
-  let viteConfig: ViteUserConfig | null = null;
+  let astroConfig: AstroConfig | null = null;
   let distDir: string = "";
   let tempDir = join(tmpdir(), "qwik-" + hash());
   return {
@@ -18,19 +18,21 @@ export default function createIntegration(): AstroIntegration {
       },
       "astro:config:done": async ({ config, setAdapter, logger }) => {
         console.log("astro:config:done", config);
-        viteConfig = config.vite;
+        astroConfig = config;
         distDir = join(config.root.pathname, "dist");
       },
       "astro:build:start": async ({ logger }) => {
         logger.info("astro:build:start");
         console.log("astro:build:start");
-        await build({ ...viteConfig });
+        await build({ ...astroConfig.vite });
         await moveArtifacts(distDir, tempDir);
-        debugger;
       },
       "astro:build:done": async ({ logger }) => {
         debugger;
-        await moveArtifacts(tempDir, distDir);
+        await moveArtifacts(
+          tempDir,
+          join(distDir, astroConfig.output === "server" ? "client" : ".")
+        );
         console.log("astro:build:done");
       },
       "astro:config:setup": async ({ addRenderer, updateConfig }) => {
